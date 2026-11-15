@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investor Accounting Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, Arial, sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+}
+
+.header{
+    background:#1f4e79;
+    color:white;
+    padding:20px;
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+}
+
+.container{
+    padding:20px;
+}
+
+.filters{
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.filter-card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+
+.filter-card label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:bold;
+}
+
+select{
+    width:100%;
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.kpi{
+    background:white;
+    border-left:6px solid #1f77b4;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+.kpi h3{
+    color:#666;
+    margin-bottom:10px;
+}
+
+.kpi p{
+    font-size:26px;
+    font-weight:bold;
+    color:#1f4e79;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);
+    margin-bottom:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+table th{
+    background:#1f4e79;
+    color:white;
+}
+
+table th,table td{
+    padding:12px;
+    text-align:center;
+    border:1px solid #ddd;
+}
+
+canvas{
+    height:450px!important;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    Investor Accounting Dashboard
+</div>
+
+<div class="container">
+
+    <div class="filters">
+
+        <div class="filter-card">
+            <label>Investor</label>
+            <select id="investorSelect"></select>
+        </div>
+
+        <div class="filter-card">
+            <label>Commitment View</label>
+            <select id="commitmentFilter">
+                <option>All</option>
+                <option>> 250,000</option>
+                <option>> 500,000</option>
+                <option>> 750,000</option>
+            </select>
+        </div>
+
+        <div class="filter-card">
+            <label>Contribution View</label>
+            <select id="contributionFilter">
+                <option>All</option>
+                <option>> 100,000</option>
+                <option>> 200,000</option>
+                <option>> 400,000</option>
+            </select>
+        </div>
+
+        <div class="filter-card">
+            <label>Distribution View</label>
+            <select id="distributionFilter">
+                <option>All</option>
+                <option>> 50,000</option>
+                <option>> 100,000</option>
+                <option>> 200,000</option>
+            </select>
+        </div>
+
+        <div class="filter-card">
+            <label>NII View</label>
+            <select id="niiFilter">
+                <option>All</option>
+                <option>Positive</option>
+                <option>Negative</option>
+            </select>
+        </div>
+
+    </div>
+
+    <div class="kpi-grid">
+
+        <div class="kpi">
+            <h3>Commitment</h3>
+            <p id="commitment">$0</p>
+        </div>
+
+        <div class="kpi">
+            <h3>Contribution</h3>
+            <p id="contribution">$0</p>
+        </div>
+
+        <div class="kpi">
+            <h3>Distribution</h3>
+            <p id="distribution">$0</p>
+        </div>
+
+        <div class="kpi">
+            <h3>Net Investment Income</h3>
+            <p id="nii">$0</p>
+        </div>
+
+        <div class="kpi">
+            <h3>Ending Balance</h3>
+            <p id="endingBalance">$0</p>
+        </div>
+
+    </div>
+
+    <div class="card">
+        <h2>Investor Metrics</h2>
+        <canvas id="investorChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>Investor Detail Table</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Investor</th>
+                    <th>Commitment</th>
+                    <th>Contribution</th>
+                    <th>Distribution</th>
+                    <th>Net Investment Income</th>
+                    <th>Ending Balance</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+const investors = [
+"Blackstone Capital",
+"Blue River Partners",
+"Apollo Ventures",
+"Summit Equity",
+"Beacon Investments",
+"Northbridge Capital",
+"Golden Oak Partners",
+"Evergreen Holdings",
+"Harbor Point Fund",
+"Sterling Investors"
+];
+
+const data = investors.map(name=>{
+
+    const commitment = Math.floor(Math.random()*900000)+100000;
+    const contribution = Math.floor(commitment*(Math.random()*0.8));
+    const distribution = Math.floor(Math.random()*300000);
+    const nii = Math.floor(Math.random()*250000)-50000;
+    const endingBalance = contribution + nii - distribution;
+
+    return {
+        investor:name,
+        commitment,
+        contribution,
+        distribution,
+        nii,
+        endingBalance
+    }
+});
+
+const investorSelect=document.getElementById('investorSelect');
+
+data.forEach(x=>{
+    let option=document.createElement('option');
+    option.value=x.investor;
+    option.text=x.investor;
+    investorSelect.appendChild(option);
+});
+
+function formatCurrency(value){
+    return '$'+value.toLocaleString();
+}
+
+function updateDashboard(){
+
+    const selected = data.find(
+        x=>x.investor===investorSelect.value
+    );
+
+    document.getElementById("commitment").innerHTML =
+        formatCurrency(selected.commitment);
+
+    document.getElementById("contribution").innerHTML =
+        formatCurrency(selected.contribution);
+
+    document.getElementById("distribution").innerHTML =
+        formatCurrency(selected.distribution);
+
+    document.getElementById("nii").innerHTML =
+        formatCurrency(selected.nii);
+
+    document.getElementById("endingBalance").innerHTML =
+        formatCurrency(selected.endingBalance);
+
+    chart.data.datasets[0].data=[
+        selected.commitment,
+        selected.contribution,
+        selected.distribution,
+        selected.nii,
+        selected.endingBalance
+    ];
+
+    chart.update();
+}
+
+const ctx=document.getElementById('investorChart');
+
+const chart=new Chart(ctx,{
+    type:'bar',
+    data:{
+        labels:[
+            'Commitment',
+            'Contribution',
+            'Distribution',
+            'NII',
+            'Ending Balance'
+        ],
+        datasets:[{
+            label:'Amount ($)',
+            data:[0,0,0,0,0],
+            backgroundColor:[
+                '#1f77b4',
+                '#2ca02c',
+                '#ff7f0e',
+                '#9467bd',
+                '#17becf'
+            ]
+        }]
+    },
+    options:{
+        responsive:true,
+        plugins:{
+            legend:{
+                display:false
+            }
+        }
+    }
+});
+
+function loadTable(){
+
+    let html='';
+
+    data.forEach(x=>{
+
+        html+=`
+        <tr>
+            <td>${x.investor}</td>
+            <td>${formatCurrency(x.commitment)}</td>
+            <td>${formatCurrency(x.contribution)}</td>
+            <td>${formatCurrency(x.distribution)}</td>
+            <td>${formatCurrency(x.nii)}</td>
+            <td>${formatCurrency(x.endingBalance)}</td>
+        </tr>
+        `;
+
+    });
+
+    document.getElementById('tableBody').innerHTML=html;
+}
+
+investorSelect.addEventListener("change",updateDashboard);
+
+loadTable();
+updateDashboard();
+
+</script>
+
+</body>
+</html>
